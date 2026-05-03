@@ -6,14 +6,13 @@ require("dotenv").config();
 const Attendance = require("./models/Attendance");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
+
+/* ✅ ROOT ROUTE (VERY IMPORTANT FOR RAILWAY) */
 app.get("/", (req, res) => {
-  res.send("🚀 Backend is running perfectly");
-});
-/* ✅ ROOT ROUTE (FIXES RAILWAY ERROR) */
-app.get("/", (req, res) => {
-  res.send("🚀 Smart Cloud Attendance API is running");
+  res.send("🚀 Smart Cloud Attendance API is LIVE on Railway");
 });
 
 /* ✅ TEST ROUTE */
@@ -58,7 +57,7 @@ app.post("/api/attendance/face", async (req, res) => {
   }
 });
 
-/* DELETE */
+/* DELETE SINGLE ATTENDANCE */
 app.delete("/api/attendance/:id", async (req, res) => {
   try {
     await Attendance.findByIdAndDelete(req.params.id);
@@ -69,13 +68,14 @@ app.delete("/api/attendance/:id", async (req, res) => {
   }
 });
 
-/* DB */
+/* DB CONNECTION */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
-const PORT = process.env.PORT || 5000;
+/* ✅ PORT FIX (CRITICAL FOR RAILWAY) */
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server running on port " + PORT);
+  console.log(`Server running on port ${PORT}`);
 });
