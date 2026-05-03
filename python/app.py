@@ -1,5 +1,3 @@
-# python/app.py
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from deepface import DeepFace
@@ -12,11 +10,19 @@ app = Flask(__name__)
 CORS(app)
 
 # ======================
+# ROOT ROUTE (IMPORTANT)
+# ======================
+@app.route("/")
+def home():
+    return "🚀 Python Face API is LIVE on Render"
+
+# ======================
 # FILE STORAGE
 # ======================
 USERS_FILE = "users.json"
 ATTENDANCE_FILE = "attendance.json"
 
+# Ensure files exist
 if not os.path.exists(USERS_FILE):
     with open(USERS_FILE, "w") as f:
         json.dump([], f)
@@ -27,19 +33,23 @@ if not os.path.exists(ATTENDANCE_FILE):
 
 
 def load_users():
-    return json.load(open(USERS_FILE))
+    with open(USERS_FILE, "r") as f:
+        return json.load(f)
 
 
 def save_users(data):
-    json.dump(data, open(USERS_FILE, "w"))
+    with open(USERS_FILE, "w") as f:
+        json.dump(data, f)
 
 
 def load_attendance():
-    return json.load(open(ATTENDANCE_FILE))
+    with open(ATTENDANCE_FILE, "r") as f:
+        return json.load(f)
 
 
 def save_attendance(data):
-    json.dump(data, open(ATTENDANCE_FILE, "w"))
+    with open(ATTENDANCE_FILE, "w") as f:
+        json.dump(data, f)
 
 
 # ======================
@@ -63,7 +73,8 @@ def get_embedding(image):
             enforce_detection=False
         )
         return result[0]["embedding"]
-    except:
+    except Exception as e:
+        print("Embedding error:", e)
         return None
 
 
@@ -118,34 +129,46 @@ def admin_login():
 # ======================
 @app.route("/attendance", methods=["POST"])
 def mark_attendance():
-    data = request.json
-    image = base64_to_image(data["image"])
-    name = data["name"]
+    try:
+        data = request.json
+        image = base64_to_image(data["image"])
+        name = data["name"]
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        embedding = get_embedding(image)
 
-    record = {
-        "name": name,
-        "time": timestamp,
-        "image": data["image"]
-    }
+        if embedding is None:
+            return jsonify({"error": "Face not detected"}), 400
 
-    attendance = load_attendance()
-    attendance.append(record)
-    save_attendance(attendance)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    return jsonify({"message": "Attendance saved"})
+        record = {
+            "name": name,
+            "time": timestamp,
+            "image": data["image"]
+        }
+
+        attendance = load_attendance()
+        attendance.append(record)
+        save_attendance(attendance)
+
+        return jsonify({"message": "Attendance saved"})
+
+    except Exception as e:
+        print("Attendance error:", e)
+        return jsonify({"error": "Server error"}), 500
 
 
 # ======================
-# ADMIN FETCH
+# FETCH ATTENDANCE
 # ======================
 @app.route("/attendance/all", methods=["GET"])
 def get_attendance():
     return jsonify(load_attendance())
 
 
+# ======================
+# RUN APP
+# ======================
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5001))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
