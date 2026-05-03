@@ -10,14 +10,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* ✅ ROOT ROUTE (VERY IMPORTANT FOR RAILWAY) */
+/* ROOT ROUTE */
 app.get("/", (req, res) => {
-  res.send("🚀 Smart Cloud Attendance API is LIVE on Railway");
+  res.send("🚀 Backend is LIVE on Railway");
 });
 
-/* ✅ TEST ROUTE */
+/* TEST */
 app.get("/test", (req, res) => {
-  res.json({ message: "API working perfectly" });
+  res.json({ message: "API working" });
 });
 
 /* ROUTES */
@@ -25,55 +25,44 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/attendance", require("./routes/attendanceRoutes"));
 app.use("/admin", require("./routes/adminRoutes"));
 
-/* 🔥 FACE ATTENDANCE */
+/* FACE ATTENDANCE */
 app.post("/api/attendance/face", async (req, res) => {
-  const { name, image } = req.body;
-
   try {
+    const { name, image } = req.body;
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const already = await Attendance.findOne({
+    const exists = await Attendance.findOne({
       email: name,
       date: { $gte: today }
     });
 
-    if (already) {
+    if (exists) {
       return res.status(400).json("Already marked today");
     }
 
-    const newEntry = new Attendance({
+    const entry = new Attendance({
       email: name,
-      date: new Date(),
-      image
+      image,
+      date: new Date()
     });
 
-    await newEntry.save();
+    await entry.save();
 
     res.json("Attendance marked");
   } catch (err) {
-    console.log(err);
-    res.status(500).json("Error");
+    console.error(err);
+    res.status(500).json("Server error");
   }
 });
 
-/* DELETE SINGLE ATTENDANCE */
-app.delete("/api/attendance/:id", async (req, res) => {
-  try {
-    await Attendance.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted successfully" });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json("Delete error");
-  }
-});
-
-/* DB CONNECTION */
+/* DB */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
-/* ✅ PORT FIX (CRITICAL FOR RAILWAY) */
+/* PORT */
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, "0.0.0.0", () => {
