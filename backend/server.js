@@ -8,7 +8,9 @@ const Attendance = require("./models/Attendance");
 const app = express();
 app.use(cors());
 app.use(express.json());
-
+app.get("/", (req, res) => {
+  res.send("🚀 Backend is running perfectly");
+});
 /* ✅ ROOT ROUTE (FIXES RAILWAY ERROR) */
 app.get("/", (req, res) => {
   res.send("🚀 Smart Cloud Attendance API is running");
@@ -74,6 +76,6 @@ mongoose.connect(process.env.MONGO_URI)
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log("Server running on port " + PORT);
 });
