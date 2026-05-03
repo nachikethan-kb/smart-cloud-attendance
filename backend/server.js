@@ -9,12 +9,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
+/* ✅ ROOT ROUTE (FIXES RAILWAY ERROR) */
+app.get("/", (req, res) => {
+  res.send("🚀 Smart Cloud Attendance API is running");
+});
+
+/* ✅ TEST ROUTE */
+app.get("/test", (req, res) => {
+  res.json({ message: "API working perfectly" });
+});
+
+/* ROUTES */
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/attendance", require("./routes/attendanceRoutes"));
 app.use("/admin", require("./routes/adminRoutes"));
 
-// 🔥 FACE ATTENDANCE SAVE (UPDATED WITH IMAGE)
+/* 🔥 FACE ATTENDANCE */
 app.post("/api/attendance/face", async (req, res) => {
   const { name, image } = req.body;
 
@@ -45,7 +55,8 @@ app.post("/api/attendance/face", async (req, res) => {
     res.status(500).json("Error");
   }
 });
-// 🔥 DELETE SINGLE ATTENDANCE
+
+/* DELETE */
 app.delete("/api/attendance/:id", async (req, res) => {
   try {
     await Attendance.findByIdAndDelete(req.params.id);
@@ -56,7 +67,7 @@ app.delete("/api/attendance/:id", async (req, res) => {
   }
 });
 
-// DB
+/* DB */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
